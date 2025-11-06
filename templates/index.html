@@ -1,0 +1,95 @@
+templates\index.html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Recipe Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 text-gray-900">
+    <nav
+      class="bg-blue-600 p-4 text-white text-center text-xl font-semibold shadow-lg"
+    >
+      AI Recipe Generator
+    </nav>
+
+    <div class="max-w-2xl mx-auto mt-10 bg-white p-8 rounded-lg shadow-md">
+      <h2 class="text-2xl font-bold mb-6">Enter Your Ingredients</h2>
+      <form onsubmit="generateRecipe(event)" class="space-y-6">
+        <div>
+          <textarea
+            id="ingredients"
+            class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            rows="4"
+            placeholder="Enter ingredients separated by commas (e.g., chicken, rice, onion, garlic)"
+            required
+          ></textarea>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-200"
+        >
+          Generate Recipe
+        </button>
+
+        <div id="loading" class="hidden text-center text-gray-600">
+          Generating recipe...
+        </div>
+
+        <div
+          id="recipeOutput"
+          class="hidden mt-6 p-6 bg-gray-50 rounded-lg border"
+        ></div>
+        <div
+          id="error"
+          class="hidden mt-4 p-4 bg-red-100 text-red-700 rounded-lg"
+        ></div>
+      </form>
+    </div>
+
+    <script>
+      async function generateRecipe(event) {
+        event.preventDefault();
+
+        const ingredients = document.getElementById("ingredients").value.trim();
+        const loadingDiv = document.getElementById("loading");
+        const recipeOutput = document.getElementById("recipeOutput");
+        const errorDiv = document.getElementById("error");
+
+        if (!ingredients) {
+          errorDiv.textContent = "Please enter some ingredients";
+          errorDiv.classList.remove("hidden");
+          return;
+        }
+
+        loadingDiv.classList.remove("hidden");
+        recipeOutput.classList.add("hidden");
+        errorDiv.classList.add("hidden");
+
+        try {
+          const response = await fetch("/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ingredients }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            recipeOutput.innerHTML = `<h3 class="font-bold mb-2">Generated Recipe:</h3><p>${data.recipe}</p>`;
+            recipeOutput.classList.remove("hidden");
+          } else {
+            throw new Error(data.error || "Failed to generate recipe");
+          }
+        } catch (error) {
+          errorDiv.textContent = error.message;
+          errorDiv.classList.remove("hidden");
+        } finally {
+          loadingDiv.classList.add("hidden");
+        }
+      }
+    </script>
+  </body>
+</html>
